@@ -4,11 +4,84 @@ var center = new L.LatLng(0, 0);
 
 var map = new L.Map('map', {center: center, zoom: 2, maxZoom: maxZoom, layers: [basemap]});
 
+var current_marker;
+
 var popupOpts = {
     autoPanPadding: new L.Point(5, 50),
     autoPan: true
 };
 
+  $findNearest = $('#find-nearest');
+
+
+
+        $findNearest.fadeIn()
+            .on('click', function(e) {
+                alert("here");
+                $findNearest.fadeOut();
+
+
+        
+                
+            //    $status.html('finding your nearest locations')
+           currentPos =  current_marker;
+           queryFeatures(currentPos, 5);
+            
+           //     myLocation.unbindTooltip();
+            
+                
+        });
+
+
+function queryFeatures(currentPos, numResults) {
+        
+        var distances = [];
+        
+       points.eachLayer(function(l) {
+          //  console.log(l._latlng);
+            console.log(l.getLatLng());
+           var distance = currentPos.distanceTo(l.getLatLng())/1000;
+            
+            distances.push(distance);
+
+             distances.sort(function(a, b) {
+                     return a - b;
+        });
+        
+
+        });
+
+  var stationsLayer = L.featureGroup();
+            
+
+        points.eachLayer(function(l) {
+            
+            var distance = currentPos.distanceTo(l.getLatLng())/1000;
+            
+            if(distance < distances[numResults]) {
+                
+          //      l.bindTooltip(distance.toLocaleString() + ' km from current location.');
+                
+                L.polyline([currentPos, l.getLatLng()], {
+                    color : 'orange',
+                    weight : 2,
+                    opacity: 1,
+                    dashArray : "5, 10"
+                }).addTo(stationsLayer);
+                
+            }
+        });
+        
+    //    map.flyToBounds(stationsLayer.getBounds(), {duration : 3, easeLinearity: .1 });
+        
+      //  map.on('zoomend', function() {
+          
+            map.addLayer(stationsLayer);
+        //})
+
+
+
+}
 var points = L.geoCsv (null, {
     firstLineTitles: true,
     fieldSeparator: fieldSeparator,
@@ -178,10 +251,13 @@ var customOptions =
    //click : e.latlng
    if(e.latlng==undefined)
         e.latlng = e;
-var cur_marker=   L.marker(e.latlng).addTo(map);
+     var cur_marker=   L.marker(e.latlng).addTo(map);
 
       cur_marker.bindPopup(customPopup , customOptions)
     .openPopup();
+
+    current_marker= e.latlng ;
+
     document.getElementById("btn-add-desc").onclick = function() {AddDescPoint(e)};
     $(".leaflet-popup-close-button").click(function(){
      map.removeLayer(cur_marker);
@@ -232,7 +308,8 @@ function addMarker (e , country, city , image) {
  
 L.imageOverlay(imageUrl, imageBounds).addTo(map);
 L.imageOverlay(imageUrl, imageBounds).bringToFront();
-
+//$("#current_marker").val( e.latlng);
+current_marker= e.latlng ;
     map.addLayer(markers);    /*Add the markets to the map. Remove  */
     try {
         var bounds = markers.getBounds();
